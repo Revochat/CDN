@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<form id="uploadForm">
+    <input type="file" id="fileInput">
+    <input type="button" value="Upload" onclick="uploadFile()">
+</form>
+
+<script>
+function uploadFile() {
+    var formData = new FormData();
+    var fileInput = document.getElementById('fileInput');
+    var file = fileInput.files[0];
+    
+    // Ajouter le fichier à FormData
+    formData.append('file', file);
+
+    // Effectuer la requête
+    fetch('http://localhost:3000/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())  // Convertir la réponse en JSON
+    .then(data => {
+        console.log(data);  // Afficher la réponse
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+</script>
+
+</body>
+</html>
