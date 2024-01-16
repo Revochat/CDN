@@ -34,27 +34,37 @@ export class RouteServer {
             }
 
             const storage = multer.diskStorage({
-                destination: (req, file, cb) => {
+                destination: async (req, file, cb) => {
                     const channelID = req.params.channelID;
-                    const date = Date.now();
+                    
+                    if(!req.token) return cb(new Error('No token provided'), '');
+                    const DB = await DB_Connect();
+                    const user = await DB.connection.collection('users').findOne({ token: req.token });
+                    if(!user) return cb(new Error('Invalid token'), '');
+            
+                    (req as any).userID = user.user_id;
+            
                     const channelPath = path.join(this.uploadFolder, channelID);
-                    const finalPath = path.join(channelPath, date.toString());
+                    const userPath = path.join(channelPath, user.user_id.toString());
+            
                     if (!fs.existsSync(channelPath)) {
-                        fs.mkdirSync(channelPath);
+                        fs.mkdirSync(channelPath, { recursive: true });
                     }
-                    if (!fs.existsSync(finalPath)) {
-                        fs.mkdirSync(finalPath);
+                    if (!fs.existsSync(userPath)) {
+                        fs.mkdirSync(userPath);
                     }
-                    cb(null, finalPath);
+                    cb(null, userPath);
                 },
                 filename: (req, file, cb) => {
-                    cb(null, file.originalname);
+                    const timestamp = Date.now();
+                    const newFilename = `${file.originalname}_${timestamp}${path.extname(file.originalname)}`;
+                    cb(null, newFilename);
                 }
             });
 
             const upload = multer({ storage: storage });
 
-            this.app.post('/upload/files/:channelID', upload.single('file'), async (req, res) => {
+            this.app.post('/upload/:channelID', upload.single('file'), async (req, res) => {
                 const file = req.file;
                 if (!file) return res.status(400).json({ error: 'No file uploaded' });
                 if(!req.params.channelID) return res.status(400).json({ error: 'No channelID provided' });
@@ -64,31 +74,16 @@ export class RouteServer {
 
                 const user = await DB.connection.collection('users').findOne({ token: token });
                 if(!user) return res.status(400).json({ error: 'Invalid token' });
-
+                const userID = user.user_id
+                
                 const channelID = new ObjectId(req.params.channelID);
                 const channel = await DB.connection.collection('channels').findOne({ _id: channelID });
 
                 if(!channel) return res.status(400).json({ error: 'Invalid channelID' });
 
                 if(!channel.members.includes(user.username)) return res.status(400).json({ error: 'You are not in this channel' });
-
-                res.json({ data: 'File uploaded successfully' });
-            });
-
-            this.app.post('/upload/avatar/:userID', upload.single('file'), async (req, res) => {
-                const file = req.file;
-                if (!file) return res.status(400).json({ error: 'No file uploaded' });
-                if(!req.params.userID) return res.status(400).json({ error: 'No userID provided' });
-
-                if(!req.token) return res.status(400).json({ error: 'No token provided' });
-                const token = req.token;
-
-                const user = await DB.connection.collection('users').findOne({ token: token });
-                if(!user) return res.status(400).json({ error: 'Invalid token' });
-
-                if(user.user_id.toString() !== req.params.userID) return res.status(400).json({ error: 'You are not this user' });
-
-                res.json({ data: 'File uploaded successfully' });
+                const fileURL = `/uploads/${req.params.channelID}/${(req as any).userID}/${file.filename}`;
+                res.json({ link: fileURL });
             });
 
             this.app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -104,7 +99,7 @@ export class RouteServer {
     public listen(): void {
         this.app.listen(this.port, () => {
             Logger.success(`Server listening on port ${this.port}`);
-            process.env.APP_PORT ? null : Logger.warn(`The port hasn't been specified in the .env file, using the default port (3000)`);
+            process.env.PORT ? null : Logger.warn(`The port hasn't been specified in the .env file, using the default port (3000)`);
         });
     }
 }
