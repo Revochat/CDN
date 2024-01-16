@@ -54,7 +54,7 @@ export class RouteServer {
 
             const upload = multer({ storage: storage });
 
-            this.app.post('/upload/:channelID', upload.single('file'), async (req, res) => {
+            this.app.post('/upload/files/:channelID', upload.single('file'), async (req, res) => {
                 const file = req.file;
                 if (!file) return res.status(400).json({ error: 'No file uploaded' });
                 if(!req.params.channelID) return res.status(400).json({ error: 'No channelID provided' });
@@ -75,6 +75,22 @@ export class RouteServer {
                 res.json({ data: 'File uploaded successfully' });
             });
 
+            this.app.post('/upload/avatar/:userID', upload.single('file'), async (req, res) => {
+                const file = req.file;
+                if (!file) return res.status(400).json({ error: 'No file uploaded' });
+                if(!req.params.userID) return res.status(400).json({ error: 'No userID provided' });
+
+                if(!req.token) return res.status(400).json({ error: 'No token provided' });
+                const token = req.token;
+
+                const user = await DB.connection.collection('users').findOne({ token: token });
+                if(!user) return res.status(400).json({ error: 'Invalid token' });
+
+                if(user.user_id.toString() !== req.params.userID) return res.status(400).json({ error: 'You are not this user' });
+
+                res.json({ data: 'File uploaded successfully' });
+            });
+
             this.app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
                 if (err) {
                     res.status(400).json({ error: err.message });
@@ -88,7 +104,7 @@ export class RouteServer {
     public listen(): void {
         this.app.listen(this.port, () => {
             Logger.success(`Server listening on port ${this.port}`);
-            process.env.PORT ? null : Logger.warn(`The port hasn't been specified in the .env file, using the default port (3000)`);
+            process.env.APP_PORT ? null : Logger.warn(`The port hasn't been specified in the .env file, using the default port (3000)`);
         });
     }
 }

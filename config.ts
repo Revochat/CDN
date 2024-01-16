@@ -7,11 +7,9 @@ const MONGO_PASSWORD = process.env.MONGO_PASSWORD;
 
 export const config = { // This is the config file for the RevoAPI. You can change the port, the timeout, and the application name, version, description, and owners.
     application: {
-        name: "RevochatAPI",
-        version: "1.2.0",
-        description: `Revochat is a chat application that allows you to chat with your friends securely and privately.
-        Let's hope one day we can make it big!
-        `,
+        name: "CDN",
+        version: "1.0.0",
+        description: `The RevochatAPI is a REST API that allows you to interact with the Revochat database.`,
         owners : [
             "ByLife",
             "Thomas78125",
