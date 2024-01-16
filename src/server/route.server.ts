@@ -74,15 +74,14 @@ export class RouteServer {
 
                 const user = await DB.connection.collection('users').findOne({ token: token });
                 if(!user) return res.status(400).json({ error: 'Invalid token' });
-                const userID = user.user_id
                 
-                const channelID = new ObjectId(req.params.channelID);
-                const channel = await DB.connection.collection('channels').findOne({ _id: channelID });
+                const channelID = req.params.channelID
+                const channel = await DB.connection.collection('channels').findOne({ channel_id: channelID });
 
                 if(!channel) return res.status(400).json({ error: 'Invalid channelID' });
 
                 if(!channel.members.includes(user.username)) return res.status(400).json({ error: 'You are not in this channel' });
-                const fileURL = `/uploads/${req.params.channelID}/${(req as any).userID}/${file.filename}`;
+                const fileURL = `/${req.params.channelID}/${(req as any).userID}/${file.filename}`;
                 res.json({ link: fileURL });
             });
 
@@ -99,7 +98,7 @@ export class RouteServer {
     public listen(): void {
         this.app.listen(this.port, () => {
             Logger.success(`Server listening on port ${this.port}`);
-            process.env.PORT ? null : Logger.warn(`The port hasn't been specified in the .env file, using the default port (3000)`);
+            process.env.APP_PORT ? null : Logger.warn(`The port hasn't been specified in the .env file, using the default port (3000)`);
         });
     }
 }
