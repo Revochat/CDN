@@ -81,7 +81,38 @@ export class RouteServer {
                 if(!channel) return res.status(400).json({ error: 'Invalid channelID' });
 
                 if(!channel.members.includes(user.username)) return res.status(400).json({ error: 'You are not in this channel' });
+
+                // check file size
+                const stats = fs.statSync(file.path);
+                const fileSizeInBytes = stats.size;
+                const fileSizeInMegabytes = fileSizeInBytes / 1000000.0; // 1MB = 1000000 bytes
+                if(fileSizeInMegabytes > 50) return res.status(400).json({ error: 'File size is too big' });
+                
                 const fileURL = `/${req.params.channelID}/${(req as any).userID}/${file.filename}`;
+                res.json({ link: fileURL });
+            });
+
+            this.app.post('/upload/:userID', upload.single('file'), async (req, res) => { // for profile picture
+                const file = req.file;
+                if (!file) return res.status(400).json({ error: 'No file uploaded' });
+                if(!req.params.userID) return res.status(400).json({ error: 'No userID provided' });
+
+                if(!req.token) return res.status(400).json({ error: 'No token provided' });
+                const token = req.token;
+
+                const user = await DB.connection.collection('users').findOne({ token: token });
+                if(!user) return res.status(400).json({ error: 'Invalid token' });
+                
+                const userID = req.params.userID
+                if(user.user_id.toString() !== userID) return res.status(400).json({ error: 'Invalid userID' });
+
+                // check file size
+                const stats = fs.statSync(file.path);
+                const fileSizeInBytes = stats.size;
+                const fileSizeInMegabytes = fileSizeInBytes / 1000000.0; // 1MB = 1000000 bytes
+                if(fileSizeInMegabytes > 50) return res.status(400).json({ error: 'File size is too big' });
+                
+                const fileURL = `/profile/${userID}/${file.filename}`;
                 res.json({ link: fileURL });
             });
 
