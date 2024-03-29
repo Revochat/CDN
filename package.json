@@ -1,4 +1,13 @@
 {
+  "name": "nodejs-typescript",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "start": "nodemon index.ts",
+    "dev": "nodemon index.ts",
+    "build": "npx tsc"
+  },
   "dependencies": {
     "@types/express": "^4.17.21",
     "@types/multer": "^1.4.11",

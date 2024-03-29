@@ -1,0 +1,11 @@
+version: "3.3"
+services:
+  cdn:
+    build: . # build from Dockerfile in current directory
+    ports: # map ports
+      - "4000:4000"
+    environment: # set environment variables
+      - MONGO_URL=mongodb://<USERNAME>:<PASSWORD>@IP:PORT/revochat?authSource=admin
+      - MONGO_USERNAME=user
+      - MONGO_PASSWORD=password
+      - APP_PORT=4000
