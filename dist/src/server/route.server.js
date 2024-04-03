@@ -27,9 +27,13 @@ class RouteServer {
         this.app = (0, express_1.default)();
         // set cors headers
         this.app.use((req, res, next) => {
-            res.header('Access-Control-Allow-Origin', '*');
-            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            res.header("*");
+            res.header('Content-Type', 'application/json');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Allow-Control-Allow-Headers');
+            if (req.method === 'OPTIONS') {
+                res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS');
+                return res.status(200).json({});
+            }
             next();
         });
         this.app.use(express_1.default.json());
