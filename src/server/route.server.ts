@@ -118,6 +118,9 @@ export class RouteServer {
             this.app.post('/uploads/avatar/:userID', upload.single('file'), async (req, res) => {
                 Logger.info('uploading avatar');
                 const file = req.file;
+
+                const server_url = process.env.SERVER_URL;
+
                 if (!file) return res.status(400).json({ error: 'No file uploaded' });
                 if(!req.params.userID) return res.status(400).json({ error: 'No userID provided' });
 
@@ -137,7 +140,7 @@ export class RouteServer {
                 if(fileSizeInMegabytes > 50) return res.status(400).json({ error: 'File size is too big' });
 
                 // save in user document in database
-                const fileURL = `http://localhost:4000/uploads/avatar/${req.params.userID}/${file.filename}`;
+                const fileURL = `${server_url}/uploads/avatar/${req.params.userID}/${file.filename}`;
                 await DB.connection.collection('users').updateOne({ user_id: userID }, { $set: { avatar: fileURL } });
 
                 res.json({ link: fileURL });
