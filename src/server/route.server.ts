@@ -137,7 +137,7 @@ export class RouteServer {
                 if(fileSizeInMegabytes > 50) return res.status(400).json({ error: 'File size is too big' });
 
                 // save in user document in database
-                const fileURL = `/uploads/avatar/${req.params.userID}/${file.filename}`;
+                const fileURL = `http://localhost:4000/uploads/avatar/${req.params.userID}/${file.filename}`;
                 await DB.connection.collection('users').updateOne({ user_id: userID }, { $set: { avatar: fileURL } });
 
                 res.json({ link: fileURL });
